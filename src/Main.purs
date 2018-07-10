@@ -2,46 +2,49 @@ module Main where
 
 import Prelude
 
+import Control.Comonad (class Comonad, duplicate, extract)
+import Control.Comonad.Traced (Traced, traced)
+import Control.Monad.Writer (Writer, tell)
+import Data.Functor.Pairing (type (⋈), identity, writerTraced)
+import Data.Monoid.Additive (Additive(..))
+import Effect (Effect)
 import Effect.Uncurried (mkEffectFn1)
-import React.Basic (ReactComponent, react)
+import React.Basic (JSX, ReactComponent, react)
 import React.Basic.DOM as R
 
-type ExampleProps =
-  { label :: String
-  }
+type UI m = (m Unit -> Effect Unit) -> JSX
+type Component w m = w (UI m)
 
-type ExampleState =
-  { counter :: Int
-  }
+move :: forall w m a b. Comonad w => Monad m => m ⋈ w -> m a -> w b -> w b
+move pairing movement space = pairing (\_ newspace -> newspace) movement (duplicate space)
 
-example :: ReactComponent ExampleProps
-example = react
-  { displayName: "example"
+explore :: forall w m
+  .  Comonad w 
+  => Monad m 
+  => String -> m ⋈ w -> Component w m -> ReactComponent {}
+explore displayName pairing component = react
+  { displayName
   , initialState
   , receiveProps
   , render
   }
   where
-    initialState :: ExampleState
-    initialState = { counter: 0 }
+    initialState = { space: component }
     receiveProps _ _ _ = pure unit
-
-    render { label } { counter } setState =
-      let
-        hello =
-          R.h1 { children: [ R.text "Hello World" ]}
-        button =
-          R.button
-            { onClick: mkEffectFn1 \_ -> do
-                setState \s -> { counter: s.counter + 1 }
-            , children:
-                [ R.text (label <> ": " <> show counter)
-                ]
-            }
+    render {} { space } setState = 
+      let 
+        send action = setState \s -> { space: move pairing action s.space }
       in
-        R.div
-          { children:
-              [ hello
-              , button
-              ]
-          }
+        extract space send
+
+tracedExample :: Component (Traced (Additive Int)) (Writer (Additive Int))
+tracedExample = traced render where
+  render :: Additive Int -> UI (Writer (Additive Int))
+  render (Additive count) send =
+    R.button
+      { onClick: mkEffectFn1 \_ -> send $ tell (Additive 1)
+      , children: [ R.text ("Increment: " <> show count) ]
+      }
+
+tracedReactComponent :: ReactComponent {}
+tracedReactComponent = explore "TracedExample" (writerTraced identity) tracedExample

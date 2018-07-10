@@ -1,20 +1,23 @@
-import React from "react";
-import ReactDOM from "react-dom";
+import React from 'react';
+import ReactDOM from 'react-dom';
 
-import Main from "./output/Main";
+import Main from './output/Main';
 
 function main() {
-  const myComponent = React.createElement(Main.example, { label: "Increment" });
+  const tracedReactComponent = React.createElement(
+    Main.tracedReactComponent,
+    {}
+  );
 
-  ReactDOM.render(myComponent, document.getElementById("app"));
+  ReactDOM.render(tracedReactComponent, document.getElementById('app'));
 }
 
 if (module.hot) {
   module.hot.accept(function() {
-    console.log("running main again");
+    console.log('running main again');
     main();
   });
 }
 
-console.log("starting");
+console.log('starting');
 main();

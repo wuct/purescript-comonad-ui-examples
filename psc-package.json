@@ -1,6 +1,13 @@
 {
   "name": "purescript-comonad-ui-examples",
-  "set": "psc-0.12.0-20180704",
-  "source": "https://github.com/purescript/package-sets.git",
-  "depends": ["effect", "psci-support", "react-basic", "prelude"]
+  "set": "crystal-ball",
+  "source": "https://github.com/wuct/package-sets.git",
+  "depends": [
+    "transformers",
+    "pairing",
+    "effect",
+    "psci-support",
+    "react-basic",
+    "prelude"
+  ]
 }
