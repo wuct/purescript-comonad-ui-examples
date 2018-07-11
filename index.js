@@ -10,6 +10,8 @@ function main() {
       <Main.tracedReactComponent />
       <h1>Store</h1>
       <Main.storeReactComponent />
+      <h1>Moore</h1>
+      <Main.mooreReactComponent />
     </div>,
     document.getElementById('app')
   );

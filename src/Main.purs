@@ -8,7 +8,9 @@ import Control.Comonad.Traced (Traced, traced)
 import Control.Monad.State (State, modify_)
 import Control.Monad.Writer (Writer, tell)
 import Data.Functor.Pairing (type (⋈), identity, stateStore, writerTraced)
+import Data.Machine.Moore (Actions, Moore, action, actionsMoore, buildMoore)
 import Data.Monoid.Additive (Additive(..))
+import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Uncurried (mkEffectFn1)
 import React.Basic (JSX, ReactComponent, react)
@@ -62,3 +64,18 @@ storeExample = store render 0 where
 
 storeReactComponent :: ReactComponent {}
 storeReactComponent = explore "StoreExample" (stateStore identity) storeExample
+
+data Input = Increment
+
+mooreExample :: Component (Moore Input) (Actions Input)
+mooreExample = buildMoore (\count -> Tuple (render count) (update count)) 0
+  where
+    update count Increment = count + 1
+    render count send = 
+      R.button
+        { onClick: mkEffectFn1 \_ -> send $ action Increment
+        , children: [ R.text ("Increment: " <> show count) ]
+        }
+
+mooreReactComponent :: ReactComponent {}
+mooreReactComponent = explore "MooreExample" actionsMoore mooreExample
