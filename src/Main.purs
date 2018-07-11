@@ -1,11 +1,13 @@
 module Main where
 
-import Prelude
+import Prelude hiding (identity)
 
 import Control.Comonad (class Comonad, duplicate, extract)
+import Control.Comonad.Store (Store, store)
 import Control.Comonad.Traced (Traced, traced)
+import Control.Monad.State (State, modify_)
 import Control.Monad.Writer (Writer, tell)
-import Data.Functor.Pairing (type (⋈), identity, writerTraced)
+import Data.Functor.Pairing (type (⋈), identity, stateStore, writerTraced)
 import Data.Monoid.Additive (Additive(..))
 import Effect (Effect)
 import Effect.Uncurried (mkEffectFn1)
@@ -48,3 +50,15 @@ tracedExample = traced render where
 
 tracedReactComponent :: ReactComponent {}
 tracedReactComponent = explore "TracedExample" (writerTraced identity) tracedExample
+
+storeExample :: Component (Store Int) (State Int)
+storeExample = store render 0 where
+  render :: Int -> UI (State Int)
+  render count send = 
+    R.button
+      { onClick: mkEffectFn1 \_ -> send $ modify_ (add 1)
+      , children: [ R.text ("Increment: " <> show count) ]
+      }
+
+storeReactComponent :: ReactComponent {}
+storeReactComponent = explore "StoreExample" (stateStore identity) storeExample

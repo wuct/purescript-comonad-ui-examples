@@ -4,12 +4,15 @@ import ReactDOM from 'react-dom';
 import Main from './output/Main';
 
 function main() {
-  const tracedReactComponent = React.createElement(
-    Main.tracedReactComponent,
-    {}
+  ReactDOM.render(
+    <div>
+      <h1>Traced</h1>
+      <Main.tracedReactComponent />
+      <h1>Store</h1>
+      <Main.storeReactComponent />
+    </div>,
+    document.getElementById('app')
   );
-
-  ReactDOM.render(tracedReactComponent, document.getElementById('app'));
 }
 
 if (module.hot) {
