@@ -12,6 +12,8 @@ function main() {
       <Main.storeReactComponent />
       <h1>Moore</h1>
       <Main.mooreReactComponent />
+      <h1>Env</h1>
+      <Main.envReactComponent />
     </div>,
     document.getElementById('app')
   );

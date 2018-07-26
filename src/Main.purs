@@ -3,11 +3,13 @@ module Main where
 import Prelude hiding (identity)
 
 import Control.Comonad (class Comonad, duplicate, extract)
+import Control.Comonad.Env (Env, env)
 import Control.Comonad.Store (Store, store)
 import Control.Comonad.Traced (Traced, traced)
+import Control.Monad.Reader (Reader)
 import Control.Monad.State (State, modify_)
 import Control.Monad.Writer (Writer, tell)
-import Data.Functor.Pairing (type (⋈), identity, stateStore, writerTraced)
+import Data.Functor.Pairing (type (⋈), identity, readerEnv, stateStore, writerTraced)
 import Data.Machine.Moore (Actions, Moore, action, actionsMoore, buildMoore)
 import Data.Monoid.Additive (Additive(..))
 import Data.Tuple (Tuple(..))
@@ -21,6 +23,9 @@ type Component w m = w (UI m)
 
 move :: forall w m a b. Comonad w => Monad m => m ⋈ w -> m a -> w b -> w b
 move pairing movement space = pairing (\_ newspace -> newspace) movement (duplicate space)
+
+select :: forall w m a b. Comonad w => Monad m => m ⋈ w -> m a -> w b -> a
+select pairing movement space = pairing (\result _ -> result) movement space
 
 explore :: forall w m
   .  Comonad w 
@@ -79,3 +84,18 @@ mooreExample = buildMoore (\count -> Tuple (render count) (update count)) 0
 
 mooreReactComponent :: ReactComponent {}
 mooreReactComponent = explore "MooreExample" actionsMoore mooreExample
+
+-- The state indside Env comonads can only be consumed by consumers (via `select`.)
+envExample :: Component (Env Int) (Reader Int)
+envExample = env 0 ui where
+  ui :: UI (Reader Int)
+  ui send =
+    R.button
+        -- We can't update the read-only state here.
+        -- Actually, we can't read it either.
+        { onClick: mkEffectFn1 \_ -> send $ pure unit
+        , children: [ R.text ("We can do nothing here.") ]
+        }
+
+envReactComponent :: ReactComponent {}
+envReactComponent = explore "EnvExample" (readerEnv identity) envExample
